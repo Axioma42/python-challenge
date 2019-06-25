@@ -1,50 +1,39 @@
 import os
 import csv
-from statistics import mean 
 
-pro_los = []
-total_months = None
-pro_los = None
-total_months = None
-dates = []
-total = None
-average = None
-maximum = None
-minimum = None
-index_max = None
-index_min = None
-max_month = None
-min_month = None
+csv_path= os.path.join("../pypoll", "election_data.csv")
 
-csv_path= os.path.join("/Users/demiurgo/Documents/bc_homeworks/3_py_ch_assignment/pybank/budget_data.csv")
+#The total number of votes cast
+def total_votes(dataset):
+    result = 0
+    for row in dataset:
+        result += 1
+    return result
 
-with open(csv_path, newline="") as csvfile:
-    reader = csv.reader(csv_path, delimiter=',')
-    next(reader)
+#The total number of votes each candidate won
+def candidate_votes(dataset):
+    lst = [row[2] for row in dataset]
+    result = {x:lst.count(x) for x in lst}
+    return result
 
-rows = [row for row in reader]
-
-for row in reader:
-    pro_los = int(row[1])
-    total_months = total_months + 1
-    dates = row[0]
-    def Average(pro_los): 
-        return mean(pro_los)
-    total = sum(pro_los)
-    average = Average(pro_los)
-    maximum = max(pro_los)
-    minimum = min(pro_los)
-    index_max = reader.index(maximum)
-    index_min = reader.index(minimum)
-    max_month = dates.pop(index_max)
-    min_month = dates.pop(index_min)
-
-output = (
-    f"Total Months: {total_months}\n"
-    f"Total : {total}\n"
-    f"Average Change: ${average}\n"
-    f"Greatest increase in Profits: {max_month} ${maximum}\n"
-    f"Greatest decrease in Profits: {min_month} ${minimum}\n"
-)
+with open(csv_path, "r") as csvfile:
+    reader = csv.reader(csv_path, delimiter = ",")
+    next(reader, None)
+    rows = [row for row in reader]
+    total_number_votes = total_votes(rows)
+    candidates_dict = candidate_votes(rows)
+    sorted(candidates_dict.values())
+    #The winner of the election
+    winner_candidate = candidates_dict.keys()[-1]
+    
+    #The percentage of votes each candidate won
+    for k, v in candidates_dict.items():
+        candidates_dict[k] = [f'{100 * (v / total_number_votes)}%', v]
+    
+    output = (
+    f"Election Results\n"
+    f"Total Votes: ${total_number_votes}\n"
+    f"{candidates_dict}\n"
+    f"Winner: {winner_candidate}\n")
 
 print(output)
