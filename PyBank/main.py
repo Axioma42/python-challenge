@@ -1,60 +1,66 @@
-import os
+# Dependencies
 import csv
-from statistics import mean 
+import os
 
-csv_path= os.path.join("../pybank", "budget_data.csv")
+# Files to load and output (Remember to change these)
+file_to_load = os.path.join("Resources", "budget_data.csv")
+file_to_output = os.path.join("analysis", "budget_analysis.txt")
 
-def total_months(dataset):
-    result = 0
-    for row in dataset:
-        result += 1
-    return result
+# Track various financial parameters
+total_months = 0
+month_of_change = []
+net_change_list = []
+greatest_increase = ["", 0]
+greatest_decrease = ["", 9999999999999999999]
+total_net = 0
 
-def total(dataset):
-    result = 0
-    for row in dataset:
-        result += int(row[1])
-    return result
+# Read the csv and convert it into a list of dictionaries
+with open(file_to_load) as financial_data:
+    reader = csv.reader(financial_data)
 
-def average_change(dataset):
-    return mean(dataset)
+    # Read the header row
+    header = next(reader)
 
-def greatest_increase(dataset):
-    result = ""
-    maximum = 0
-    index = None 
-    for row in dataset:
-        maximum = max(int(row[1]))
-        index = dataset.index(maximum)
-    result = str(dataset.pop(index))
-    return result
+    # Extract first row to avoid appending to net_change_list
+    first_row = next(reader)
+    total_months = total_months + 1
+    total_net = total_net + int(first_row[1])
+    prev_net = int(first_row[1])
 
-def greatest_decrease(dataset):
-    result = ""
-    minimum = 0
-    index = None 
-    for row in dataset:
-        minimum = min(int(row[1]))
-        index = dataset.index(minimum)
-    result = str(dataset.pop(index))
-    return result
+    for row in reader:
 
-with open(csv_path, "r") as csvfile:
-    reader = csv.reader(csv_path, delimiter = ",")
-    next(reader, None)
-    rows = [row for row in reader]
-    output_total_months = total_months(rows)
-    output_total = total(rows)
-    output_average_change = average_change(rows)
-    output_greatest_increase = greatest_increase(rows)
-    output_greatest_decrease = greatest_decrease(rows)
-    
-    output = (
-    f"Total Months: {output_total_months}\n"
-    f"Total : {output_total}\n"
-    f"Average Change: ${output_average_change}\n"
-    f"Greatest increase in Profits: {output_greatest_increase}\n"
-    f"Greatest decrease in Profits: {output_greatest_decrease}\n")
-    
-    print(output)
-    
+        # Track the total
+        total_months = total_months + 1
+        total_net = total_net + int(row[1])
+
+        # Track the net change
+        net_change = int(row[1]) - prev_net
+        prev_net = int(row[1])
+        net_change_list = net_change_list + [net_change]
+        month_of_change = month_of_change + [row[0]]
+
+        # Calculate the greatest increase
+        if net_change > greatest_increase[1]:
+            greatest_increase[0] = row[0]
+            greatest_increase[1] = net_change
+
+        # Calculate the greatest decrease
+        if net_change < greatest_decrease[1]:
+            greatest_decrease[0] = row[0]
+            greatest_decrease[1] = net_change
+
+# Calculate the Average Net Change
+net_monthly_avg = sum(net_change_list) / len(net_change_list)
+
+# Generate Output Summary
+output = (
+    f"\nFinancial Analysis\n"
+    f"----------------------------\n"
+    f"Total Months: {total_months}\n"
+    f"Total: ${total_net}\n"
+    f"Average  Change: ${net_monthly_avg:.2f}\n"
+    f"Greatest Increase in Profits: {greatest_increase[0]} (${greatest_increase[1]})\n"
+    f"Greatest Decrease in Profits: {greatest_decrease[0]} (${greatest_decrease[1]})\n")
+
+# Print the output (to terminal)
+print(output)
